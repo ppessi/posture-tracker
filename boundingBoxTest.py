@@ -1,3 +1,6 @@
+# This code takes pictures from a folder, recognizes the faces in them and colours the boundingBoxes black.
+# Made for testing.
+
 import openface
 import cv2
 import os
@@ -6,7 +9,6 @@ from scipy import misc
 from PIL import Image
 
 args = sys.argv
-print(args)
 
 #args[1]: The path to the file 'shape_predictor_68_face_landmarks.dat' found in the openface/models/dlib folder.
 align = openface.AlignDlib(args[1])
