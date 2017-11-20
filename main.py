@@ -30,6 +30,7 @@ Config.set('graphics','resizable',False)
 class Data(Widget):
     text = ObjectProperty(None)
     img = ObjectProperty(None)
+    button = ObjectProperty(None)
     faceRecognition = 0
 
     def __init__(self, faceRecognition):
@@ -40,6 +41,12 @@ class Data(Widget):
         diff = self.faceRecognition.takeComparisonPicture()
         self.text.text = diff
         self.img.reload()
+
+    def on_touch_down(self, touch):
+        if self.button.collide_point(*touch.pos):
+            Clock.schedule_interval(lambda dt: self.faceRecognition.setRefPicture(), 0.1)
+            return True
+        return super(Data,self).on_touch_down(touch)
 
 class FaceRecognition():
     boundingBox = None
@@ -82,24 +89,29 @@ class FaceRecognition():
         self.boundingBox = self.getBoundingBox(img)
         img = self.drawBoundingBox(img, self.boundingBox, (255,0,0))
         self.saveImg(img)
+        if self.boundingBox != None:
+            return False
 
     def takeComparisonPicture(self):
         if not self.boundingBox:
             self.setRefPicture()
+            return "Face not found"
         img = self.takePicture()
         boundingBox = self.getBoundingBox(img)
         img = self.drawBoundingBox(img, self.boundingBox, (255,0,0))
-        img = self.drawBoundingBox(img, boundingBox, (255, 255, 255))
+        img = self.drawBoundingBox(img, boundingBox, (255,255,255))
         self.saveImg(img)
         if not boundingBox or not self.boundingBox:
             return "Face not found"
-        diff_size = int(((boundingBox.area()-self.boundingBox.area())*1.0/self.boundingBox.area())*100)
-#         diff_x = boundingBox.center().x-self.boundingBox.center().x
-        # diff_y = boundingBox.center().y-self.boundingBox.center().y
-        diff_x = int(((boundingBox.center().x-self.boundingBox.center().x)*1.0/self.boundingBox.width())*100)
-        diff_y = int(((boundingBox.center().y-self.boundingBox.center().y)*1.0/self.boundingBox.height())*100)
-        return "Relative difference in size: " + str(diff_size) + \
-               "%\nRelative difference in location: " + str(diff_x) + "%, " + str(diff_y) + "%"
+        diff = self.compareFacePosition(boundingBox, self.boundingBox)
+        return "Relative difference in size: " + str(diff[0]) + \
+               "%\nRelative difference in location: " + str(diff[1]) + "%, " + str(diff[2]) + "%"
+
+    def compareFacePosition(self, bBox1, bBox2):
+        diff_size = int(((bBox1.area()-bBox2.area())*1.0/bBox2.area())*100)
+        diff_x = int(((bBox1.center().x-bBox2.center().x)*1.0/bBox2.width())*100)
+        diff_y = int(((bBox1.center().y-bBox2.center().y)*1.0/bBox2.height())*100)
+        return [diff_size, diff_x, diff_y]
 
     def getBoundingBox(self, img):
         boundingBox = self.align.getLargestFaceBoundingBox(img)
@@ -121,7 +133,8 @@ class MyApp(App):
     def build(self):
         faceRecognition = FaceRecognition()
         data = Data(faceRecognition)
-        Clock.schedule_interval(data.update,0.1)
+        Clock.schedule_interval(lambda dt: faceRecognition.setRefPicture(), 0.1)
+        Clock.schedule_interval(data.update,2)
         return data
 
 MyApp().run()
