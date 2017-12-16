@@ -1,0 +1,39 @@
+#:kivy 1.9.0
+
+<TakePhoto>:
+	image: img
+	button: button
+	
+	FloatLayout:
+		Image:
+			id: img
+			source: "1.png"
+			allow_stretch: True
+			size: root.width,root.height
+			color: 1,0,0,0	
+	
+		Button:
+			id: button
+			font_size: 20
+			text_size: self.size
+			text: "Take comparison picture"
+			color: 1,1,1,1
+			disabled_color: 1,1,1,0.5
+			halign: 'center'
+			valing: 'middle'
+			background_color: 0.9,0.9,0.9,1
+			size_x: 200
+			size_y: 60
+			size_hint: None, None
+			size: self.size_x,self.size_y
+			pos: root.width/2 - self.size_x/2, 20
+		
+<PostureTracking>:
+	image: img
+	FloatLayout:
+		Image:
+			id: img
+			source: "1.png"
+			allow_stretch: True
+			size: root.width, root.height
+			color: 1,1,1,1
