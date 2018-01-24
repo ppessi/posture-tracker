@@ -24,11 +24,43 @@ import openface
 import dlib
 import sys
 import numpy as np
+import time
 from scipy import misc
 from PIL import Image
 
+import notify
+
 Window.clearcolor = (1,1,1,1)
 Builder.load_file('gui.kv')
+
+class Settings(Screen):
+    timeButton = ObjectProperty(None)
+    continueButton = ObjectProperty(None)
+    dropDown = ObjectProperty(None)
+    checkBox = ObjectProperty(None)
+
+    notificationInterval = 5
+    next = 'takePhoto'
+
+    def __init__(self, **kwargs):
+        super(Settings, self).__init__(**kwargs)
+        self.timeButton.bind(on_release=self.dropDown.open)
+
+    def setTime(self, time):
+        self.notificationInterval = int(time)
+        self.timeButton.text = time
+
+    def on_touch_down(self, touch):
+        if self.continueButton.collide_point(*touch.pos):
+            self.manager.current = self.next
+            self.next = 'trackPosture'
+            return True
+        return super(Settings,self).on_touch_down(touch)
+
+    def on_leave(self):
+        global notificationInterval, checkSidewaysMovement
+        notificationInterval = self.notificationInterval
+        checkSidewaysMovement = self.checkBox.active
 
 class TakePhoto(Screen):
     image = ObjectProperty(None)
@@ -57,6 +89,7 @@ class TakePhoto(Screen):
         outimg = Image.fromarray(img, "RGB")
         outimg.save("1.png","PNG")
         self.image.reload()
+        self.image.color = (1,1,1,1)
 
     def on_touch_down(self, touch):
         if self.button.collide_point(*touch.pos):
@@ -66,13 +99,7 @@ class TakePhoto(Screen):
 
     def on_enter(self):
         self.takingPictures = True
-        rval, img = cv2.VideoCapture(-1).read()
-        img = np.zeros((len(img),len(img[0]),3),dtype=np.uint8)
-        outimg = Image.fromarray(img, "RGB")
-        outimg.save("1.png","PNG")
-        self.image.reload()
-        self.image.color = 1,1,1,1
-        thread.start_new_thread(self.takePictures,()) 
+        thread.start_new_thread(self.takePictures,())
         self.events.append(Clock.schedule_interval(self.update,0.1))
 
     def on_pre_leave(self):
@@ -91,8 +118,13 @@ class TakePhoto(Screen):
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             self.picture = img
 
+        rval, img = vc.read()
+        img = np.zeros((len(img),len(img[0]),3),dtype=np.uint8)
+        outimg = Image.fromarray(img, "RGB")
+        outimg.save("1.png","PNG")
+
     def setRef(self):
-        global refBBox
+        global refBBox 
         refBBox = None
         while not refBBox:
             refBBox = self.faceRec.getBoundingBox(self.picture)
@@ -100,50 +132,93 @@ class TakePhoto(Screen):
 
 class PostureTracking(Screen):
     image = ObjectProperty(None)
+    settingButton = ObjectProperty(None)
+    photoButton = ObjectProperty(None)
 
     refBBox = None
+    notificationInterval = 0
+    checkSidewaysMovement = 0
     events = []
     faceRec = None
     colors = [(1,0,0,1),(0,1,0,1)]
     gray = (0.5,0.5,0.5,1)
+    multiplier = 1
+
+    badPositionCount = 0
+    badPictureCount = 0
 
     def on_enter(self):
-        global refBBox
+        global refBBox, notificationInterval, checkSidewaysMovement
         self.refBBox = refBBox
+        self.notificationInterval = notificationInterval
+        self.checkSidewaysMovement = checkSidewaysMovement
         self.faceRec = FaceRecognition()
-        self.events.append(Clock.schedule_interval(self.update,0.1))
+        self.badPictureCount = 0
+        self.badPositionCount = 0
+        self.events.append(Clock.schedule_interval(self.update,60))
 
     def on_pre_leave(self):
         for event in self.events:
             event.cancel()
         self.events = []
 
+    def on_touch_down(self, touch):
+        if self.settingButton.collide_point(*touch.pos):
+            self.manager.current = 'settings'            
+            return True
+        elif self.photoButton.collide_point(*touch.pos):
+            self.manager.current = 'takePhoto'
+            return True
+        return super(PostureTracking,self).on_touch_down(touch)
+
     def update(self,dt):
         vc = cv2.VideoCapture(-1)
         rval, img = vc.read()
         if not rval:
-            print("Could not take picture")
+            notify.send("Posture Tracker", "Webcam is not working")
             return
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         bBox = self.faceRec.getBoundingBox(img)
         diff = self.faceRec.compareFacePosition(bBox, self.refBBox)
         self.image.color = 1,1,1,1
-        if not bBox: #face not found
+        if bBox: #face found
+            self.badPictureCount = 0
+            self.badPositionCount += 1
+            #leaned backwards
+            if (diff[0] < -30):
+                self.image.source = "textures/4.png"
+            #leaned forwards
+            elif (diff[0] > 40):
+                self.image.source = "textures/2.png"
+            #leaning to the side, only checked when checkSidewaysMovements is true
+            elif self.checkSidewaysMovement and (abs(diff[1]) > 50):
+                self.image.source = "textures/6.png"
+                self.image.color = 1,0,0,1
+            #slouch
+            elif (diff[2]) > 20:
+                self.image.source = "textures/3.png"
+            #higher than normal position
+            elif (diff[2]) < -20:
+                self.image.source = "textures/5.png"
+            #good posture
+            else:
+                self.image.source = "textures/1.png"
+                self.badPositionCount -= 1
+                self.multiplier = 1
+        #face not found
+        else:
             self.image.source = "textures/6.png"
-        elif (diff[0] < -30): #leaned backwards
-            self.image.source = "textures/4.png"
-        elif (diff[0] > 40): #leaned forwards
-            self.image.source = "textures/2.png"
-        elif (abs(diff[1]) > 50): #leaning to the side 
-            self.image.source = "textures/6.png"
-            self.image.color = 1,0,0,1
-        elif (diff[2]) > 20: #slouch
-            self.image.source = "textures/3.png"
-        elif (diff[2]) < -20: #somehow much higher than normal position
-            self.image.source = "textures/5.png"
-        else: #good posture
-            self.image.source = "textures/1.png"
+            self.badPictureCount += 1
+
         self.image.reload()
+        
+        if (self.badPictureCount > 10):
+            notify.send("Posture Tracker", "I can't see you! Are you still there? Brighter lighting might be necessary")
+        elif (self.badPositionCount == self.notificationInterval * self.multiplier):
+            notify.send("Posture Tracker", "You have been sitting badly for " + str(self.badPositionCount) + " minutes")
+        elif (self.badPositionCount > self.notificationInterval * self.multiplier):
+            notify.send("Posture Tracker", "It seems you're still sitting badly. Or maybe you should take a new reference picture?")
+            self.multiplier += 1
 
 class FaceRecognition():
     boundingBox = None
@@ -227,14 +302,19 @@ class FaceRecognition():
         outimg.save("1.png","PNG")
        
 sm = ScreenManager(transition=NoTransition())
+sm.add_widget(Settings(name='settings'))
 sm.add_widget(TakePhoto(name='takePhoto'))
 sm.add_widget(PostureTracking(name='trackPosture'))
 
 refBBox = None
+notificationInterval = 5 * 60
+checkSidewaysMovement = False
 
 class PostureTrackerApp(App):
 
     def build(self):
+        notify.init("Posture Tracker")
+        # notify.send("Posture Tracker", "Remember to sit properly!")
         return sm
 
 PostureTrackerApp().run()

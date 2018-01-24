@@ -1,5 +1,110 @@
 #:kivy 1.9.0
 
+<TimeButton@Button>:
+	text_size: self.size
+	font_size: 20
+	size_hint: None, None
+	height: 30
+	width: 40
+	halign: 'center'
+	valign: 'middle'
+	background_color: 1.9,1.9,1.9,1
+	color: 0,0,0,1
+
+<Settings>:
+	timeButton: timeButton
+	dropDown: dropDown
+	firstText: first
+	continueButton: continueButton
+	checkBox: checkBox
+
+	FloatLayout:
+		canvas.before:
+			Color:
+				rgba: 0.949, 0.961, 0.976, 1
+			Rectangle:
+				size: self.size
+				pos: self.pos
+
+		Label:
+			id: first
+			text_size: self.size
+			font_size: 20
+			size_hint: None, None
+			height: 80
+			width: 600
+			pos: 50, 290
+			halign: 'left'
+			valign: 'bottom'
+			color: 0,0,0,1
+			text: "How often do you want notifications?\n\nEvery           minutes"
+			#text: "Remind me to correct my posture if I have been sitting badly for"
+
+		TimeButton:
+			id: timeButton
+			pos: first.pos[0] + 55, first.pos[1]
+			text: "5"
+			background_color: 1.5,1.5,1.5,1
+
+		DropDown:
+			id: dropDown
+			color: 1,1,1,1
+			attach_to: timeButton
+			pos: first.pos[0] + 55, first.pos[1] - 180
+			TimeButton:
+				text: "2"
+				on_release: root.setTime(self.text)
+			TimeButton:
+				text: "5"
+				on_release: root.setTime(self.text)
+			TimeButton:
+				text: "10"
+				on_release: root.setTime(self.text)
+			TimeButton:
+				text: "15"
+				on_release: root.setTime(self.text)
+			TimeButton:
+				text: "20"
+				on_release: root.setTime(self.text)
+			TimeButton:
+				text: "30"
+	
+		Label:
+			text_size: self.size
+			font_size: 20
+			size_hint: None, None
+			height: 50
+			width: 350
+			pos: first.pos[0], first.pos[1] - 100
+			halign: 'left'
+			valign: 'bottom'
+			color: 0,0,0,1		
+			text: "Pay attention to sideways movement:"
+
+		CheckBox:
+			id: checkBox
+			pos: first.pos[0] + 350, first.pos[1] - 96
+			color: 1,0,1,4
+			background_color: 1,1,0,1
+			size_hint: None, None
+			height: 15
+			width: 15
+
+		Button:
+			id: continueButton
+			font_size: 20
+			text_size: self.size
+			text: "Save settings"
+			color: 0,0,0,1
+			halign: 'center'
+			valign: 'middle'
+			background_color: 1.9,1.9,1.9,1
+			size_x: 100
+			size_y: 60
+			size_hint: None, None
+			size: self.size_x,self.size_y
+			pos: root.width / 2 - self.size[0] / 2, first.pos[1] - 250
+
 <TakePhoto>:
 	image: img
 	button: button
@@ -10,7 +115,7 @@
 			source: "1.png"
 			allow_stretch: True
 			size: root.width,root.height
-			color: 1,0,0,0	
+			color: 0,0,0,1
 	
 		Button:
 			id: button
@@ -20,7 +125,7 @@
 			color: 1,1,1,1
 			disabled_color: 1,1,1,0.5
 			halign: 'center'
-			valing: 'middle'
+			valign: 'middle'
 			background_color: 0.9,0.9,0.9,1
 			size_x: 200
 			size_y: 60
@@ -30,10 +135,43 @@
 		
 <PostureTracking>:
 	image: img
+	settingButton: settingButton
+	photoButton: photoButton
+
 	FloatLayout:
 		Image:
 			id: img
-			source: "1.png"
+			source: "textures/6.png"
 			allow_stretch: True
 			size: root.width, root.height
 			color: 1,1,1,1
+		
+		Button:
+			id: settingButton
+			font_size: 20
+			text_size: self.size
+			text: "Settings"
+			color: 1,1,1,1
+			background_color: 0.9,0.9,0.9,1
+			size_x: 200
+			size_y: 60
+			size_hint: None, None
+			size: self.size_x, self.size_y
+			pos: root.width/2 - self.size_x * 1.1, 20
+			halign: 'center'
+			valign: 'middle'
+
+		Button:
+			id: photoButton
+			font_size: 20
+			text_size: self.size
+			text: "Take new photo"
+			color: 1,1,1,1
+			background_color: 0.9,0.9,0.9,1
+			size_x: 200
+			size_y: 60
+			size_hint: None, None
+			size: self.size_x, self.size_y
+			pos: root.width/2 + self.size_x * 0.1, 20
+			halign: 'center'
+			valign: 'middle'
