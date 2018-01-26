@@ -185,29 +185,26 @@ class PostureTracking(Screen):
             self.badPictureCount = 0
             self.badPositionCount += 1
             #leaned backwards
-            if (diff[0] < -30):
-                self.image.source = "textures/4.png"
+            if diff[0] < -30 or diff[2] > 20:
+                self.image.source = "textures/leanedback.png"
             #leaned forwards
-            elif (diff[0] > 40):
-                self.image.source = "textures/2.png"
+            elif diff[0] > 40:
+                self.image.source = "textures/crouch.png"
             #leaning to the side, only checked when checkSidewaysMovements is true
-            elif self.checkSidewaysMovement and (abs(diff[1]) > 50):
-                self.image.source = "textures/6.png"
+            elif self.checkSidewaysMovement and abs(diff[1]) > 50:
+                self.image.source = "textures/side.png"
                 self.image.color = 1,0,0,1
-            #slouch
-            elif (diff[2]) > 20:
-                self.image.source = "textures/3.png"
             #higher than normal position
-            elif (diff[2]) < -20:
-                self.image.source = "textures/5.png"
+            elif diff[2] < -20:
+                self.image.source = "textures/high.png"
             #good posture
             else:
-                self.image.source = "textures/1.png"
+                self.image.source = "textures/good.png"
                 self.badPositionCount -= 1
                 self.multiplier = 1
         #face not found
         else:
-            self.image.source = "textures/6.png"
+            self.image.source = "textures/notfound.png"
             self.badPictureCount += 1
 
         self.image.reload()
