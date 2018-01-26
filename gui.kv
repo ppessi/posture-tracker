@@ -50,10 +50,7 @@
 			id: dropDown
 			color: 1,1,1,1
 			attach_to: timeButton
-			pos: first.pos[0] + 55, first.pos[1] - 180
-			TimeButton:
-				text: "2"
-				on_release: root.setTime(self.text)
+			pos: first.pos[0] + 55, first.pos[1] - 150
 			TimeButton:
 				text: "5"
 				on_release: root.setTime(self.text)
@@ -141,7 +138,7 @@
 	FloatLayout:
 		Image:
 			id: img
-			source: "textures/6.png"
+			source: "textures/good.png"
 			allow_stretch: True
 			size: root.width, root.height
 			color: 1,1,1,1

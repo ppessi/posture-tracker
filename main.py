@@ -200,7 +200,7 @@ class PostureTracking(Screen):
             #good posture
             else:
                 self.image.source = "textures/good.png"
-                self.badPositionCount -= 1
+                self.badPositionCount = 0
                 self.multiplier = 1
         #face not found
         else:
@@ -209,11 +209,11 @@ class PostureTracking(Screen):
 
         self.image.reload()
         
-        if (self.badPictureCount > 10):
+        if self.badPictureCount > min(10,self.notificationInterval):
             notify.send("Posture Tracker", "I can't see you! Are you still there? Brighter lighting might be necessary")
-        elif (self.badPositionCount == self.notificationInterval * self.multiplier):
+        elif self.badPositionCount == self.notificationInterval * self.multiplier:
             notify.send("Posture Tracker", "You have been sitting badly for " + str(self.badPositionCount) + " minutes")
-        elif (self.badPositionCount > self.notificationInterval * self.multiplier):
+        elif self.badPositionCount > self.notificationInterval * self.multiplier:
             notify.send("Posture Tracker", "It seems you're still sitting badly. Or maybe you should take a new reference picture?")
             self.multiplier += 1
 
@@ -311,7 +311,6 @@ class PostureTrackerApp(App):
 
     def build(self):
         notify.init("Posture Tracker")
-        # notify.send("Posture Tracker", "Remember to sit properly!")
         return sm
 
 PostureTrackerApp().run()
