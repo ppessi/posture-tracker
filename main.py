@@ -161,6 +161,7 @@ class PostureTracking(Screen):
         for event in self.events:
             event.cancel()
         self.events = []
+        self.image.source = "textures/good.png"
 
     def on_touch_down(self, touch):
         if self.settingButton.collide_point(*touch.pos):
@@ -180,7 +181,6 @@ class PostureTracking(Screen):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         bBox = self.faceRec.getBoundingBox(img)
         diff = self.faceRec.compareFacePosition(bBox, self.refBBox)
-        self.image.color = 1,1,1,1
         if bBox: #face found
             self.badPictureCount = 0
             self.badPositionCount += 1
@@ -193,7 +193,6 @@ class PostureTracking(Screen):
             #leaning to the side, only checked when checkSidewaysMovements is true
             elif self.checkSidewaysMovement and abs(diff[1]) > 50:
                 self.image.source = "textures/side.png"
-                self.image.color = 1,0,0,1
             #higher than normal position
             elif diff[2] < -20:
                 self.image.source = "textures/high.png"
@@ -209,7 +208,7 @@ class PostureTracking(Screen):
 
         self.image.reload()
         
-        if self.badPictureCount > min(10,self.notificationInterval):
+        if self.badPictureCount > 5:
             notify.send("Posture Tracker", "I can't see you! Are you still there? Brighter lighting might be necessary")
         elif self.badPositionCount == self.notificationInterval * self.multiplier:
             notify.send("Posture Tracker", "You have been sitting badly for " + str(self.badPositionCount) + " minutes")
