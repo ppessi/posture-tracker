@@ -27,6 +27,7 @@ import numpy as np
 import time
 from scipy import misc
 from PIL import Image
+import time
 
 import notify
 
@@ -147,6 +148,8 @@ class PostureTracking(Screen):
     badPositionCount = 0
     badPictureCount = 0
 
+    takingPictures = True
+
     def on_enter(self):
         global refBBox, notificationInterval, checkSidewaysMovement
         self.refBBox = refBBox
@@ -156,12 +159,15 @@ class PostureTracking(Screen):
         self.badPictureCount = 0
         self.badPositionCount = 0
         self.events.append(Clock.schedule_interval(self.update,60))
+        self.takingPictures = True
+        self.count = 0
 
     def on_pre_leave(self):
         for event in self.events:
             event.cancel()
         self.events = []
         self.image.source = "textures/good.png"
+        self.takingPictures = False
 
     def on_touch_down(self, touch):
         if self.settingButton.collide_point(*touch.pos):
@@ -172,7 +178,12 @@ class PostureTracking(Screen):
             return True
         return super(PostureTracking,self).on_touch_down(touch)
 
-    def update(self,dt):
+    def update(self, dt):
+        self.events.append(Clock.schedule_interval(self.takePicture, 1))
+
+    count = 0
+    def takePicture(self, dt):
+        self.count+=1
         vc = cv2.VideoCapture(-1)
         rval, img = vc.read()
         if not rval:
@@ -201,12 +212,10 @@ class PostureTracking(Screen):
                 self.image.source = "textures/good.png"
                 self.badPositionCount = 0
                 self.multiplier = 1
-        #face not found
-        else:
-            self.image.source = "textures/notfound.png"
+        #face not found on 10th time
+        elif self.count == 10:
             self.badPictureCount += 1
-
-        self.image.reload()
+            self.image.source = "textures/notfound.png"
         
         if self.badPictureCount > 5:
             notify.send("Posture Tracker", "I can't see you! Are you still there? Brighter lighting might be necessary")
@@ -215,6 +224,11 @@ class PostureTracking(Screen):
         elif self.badPositionCount > self.notificationInterval * self.multiplier:
             notify.send("Posture Tracker", "It seems you're still sitting badly. Or maybe you should take a new reference picture?")
             self.multiplier += 1
+
+        if bBox or self.count == 10:
+            self.image.reload()
+            self.count = 0
+            return False
 
 class FaceRecognition():
     boundingBox = None
