@@ -14,9 +14,12 @@
 <Settings>:
 	timeButton: timeButton
 	dropDown: dropDown
-	firstText: first
 	continueButton: continueButton
-	checkBox: checkBox
+	instantlyButton: instantlyButton
+	intervalButton: intervalButton
+	instantlyText: instantlyText
+	instantlyTextBg: instantlyTextBg
+	sidewaysButton: sidewaysButton
 
 	FloatLayout:
 		canvas.before:
@@ -27,30 +30,27 @@
 				pos: self.pos
 
 		Label:
-			id: first
 			text_size: self.size
 			font_size: 20
 			size_hint: None, None
 			height: 80
 			width: 600
-			pos: 50, 290
+			pos: 50, 300
 			halign: 'left'
 			valign: 'bottom'
 			color: 0,0,0,1
-			text: "How often do you want notifications?\n\nEvery           minutes"
-			#text: "Remind me to correct my posture if I have been sitting badly for"
+			text: "Notification interval:"
 
 		TimeButton:
 			id: timeButton
-			pos: first.pos[0] + 55, first.pos[1]
+			pos: 240, 295
 			text: "5"
 			background_color: 1.5,1.5,1.5,1
 
 		DropDown:
 			id: dropDown
-			color: 1,1,1,1
 			attach_to: timeButton
-			pos: first.pos[0] + 55, first.pos[1] - 150
+			pos: 240, 205
 			TimeButton:
 				text: "5"
 				on_release: root.setTime(self.text)
@@ -60,33 +60,103 @@
 			TimeButton:
 				text: "15"
 				on_release: root.setTime(self.text)
-			TimeButton:
-				text: "20"
-				on_release: root.setTime(self.text)
-			TimeButton:
-				text: "30"
-				on_release: root.setTime(self.text)
 	
+		FloatLayout:
+			id: instantlyTextBg
+			color: 0.949, 0.961, 0.976, 1
+			canvas.before:
+				Color:
+					rgba: instantlyTextBg.color
+				Rectangle:
+					size: self.size
+					pos: self.pos
+			Label:
+				id: instantlyText
+				text_size: self.size
+				font_size: 20
+				size_hint: None, None
+				height: 80
+				width: 600
+				pos: 50, 300
+				halign: 'left'
+				valign: 'bottom'
+				color: 0,0,0,1
+				text: "The program will take pictures every 10 seconds and notify you instantly if your posture is bad."
+
+		Label:
+			text_size: self.size
+			font_size: 20
+			size_hint: None, None
+			height: 80
+			width: 600
+			pos: 50, 400
+			halign: 'left'
+			valign: 'bottom'
+			color: 0,0,0,1
+			text: "Send me notifications..."
+
+		ToggleButton:
+			id: instantlyButton
+			size_hint: None, None
+			size: 100, 50
+			pos: 270, 390
+			text: "Instantly"
+			text_size: self.size
+			font_size: 18
+			valign: 'middle'
+			halign: 'center'
+			group: 'notificationSetting'
+			state: 'down'
+
+		ToggleButton:
+			id: intervalButton
+			size_hint: None, None
+			size: 100, 50
+			pos: 380, 390
+			text: "After a few minutes"
+			text_size: self.size
+			font_size: 18
+			valign: 'middle'
+			halign: 'center'
+			group: 'notificationSetting'
+
 		Label:
 			text_size: self.size
 			font_size: 20
 			size_hint: None, None
 			height: 50
 			width: 350
-			pos: first.pos[0], first.pos[1] - 100
+			pos: 50, 190
 			halign: 'left'
 			valign: 'bottom'
 			color: 0,0,0,1		
 			text: "Pay attention to sideways movement:"
 
-		CheckBox:
-			id: checkBox
-			pos: first.pos[0] + 350, first.pos[1] - 96
-			color: 1,0,1,4
-			background_color: 1,1,0,1
+		ToggleButton:
+			id: sidewaysButton
+			pos: 400, 180
 			size_hint: None, None
-			height: 15
-			width: 15
+			height: 40
+			width: 60
+			text_size: self.size
+			halign: 'center'
+			valign: 'middle'
+			text: "Yes"
+			font_size: 20
+			group: 'sidewaysButtons'
+			state: 'down'
+
+		ToggleButton:
+			pos: 480, 180
+			size_hint: None, None
+			height: 40
+			width: 60
+			text_size: self.size
+			halign: 'center'
+			valign: 'middle'
+			text: "No"
+			font_size: 20
+			group: 'sidewaysButtons'
 
 		Button:
 			id: continueButton
@@ -101,7 +171,7 @@
 			size_y: 60
 			size_hint: None, None
 			size: self.size_x,self.size_y
-			pos: root.width / 2 - self.size[0] / 2, first.pos[1] - 250
+			pos: root.width / 2 - self.size[0] / 2, 40
 
 <TakePhoto>:
 	image: img

@@ -36,9 +36,13 @@ Builder.load_file('gui.kv')
 
 class Settings(Screen):
     timeButton = ObjectProperty(None)
-    continueButton = ObjectProperty(None)
+    instantlyButton = ObjectProperty(None)
+    intervalButton = ObjectProperty(None)
+    instantlyText = ObjectProperty(None)
     dropDown = ObjectProperty(None)
-    checkBox = ObjectProperty(None)
+    instantlyTextBg = ObjectProperty(None)
+    continueButton = ObjectProperty(None)
+    sidewaysButton = ObjectProperty(None)
 
     notificationInterval = 5
     next = 'takePhoto'
@@ -56,12 +60,28 @@ class Settings(Screen):
             self.manager.current = self.next
             self.next = 'trackPosture'
             return True
+        elif self.instantlyButton.collide_point(*touch.pos):
+             color = self.instantlyTextBg.color
+             color[3] = 1
+             self.instantlyTextBg.color = color
+             color = self.instantlyText.color
+             color[3] = 1
+             self.instantlyText.color = color
+             self.timeButton.disabled = True
+        elif self.intervalButton.collide_point(*touch.pos):
+             color = self.instantlyTextBg.color
+             color[3] = 0
+             self.instantlyTextBg.color = color
+             color = self.instantlyText.color
+             color[3] = 0
+             self.instantlyText.color = color
+             self.timeButton.disabled = False
         return super(Settings,self).on_touch_down(touch)
 
     def on_leave(self):
         global notificationInterval, checkSidewaysMovement
-        notificationInterval = self.notificationInterval
-        checkSidewaysMovement = self.checkBox.active
+        notificationInterval = [self.notificationInterval, 1][self.instantlyButton.state == 'down']
+        checkSidewaysMovement = self.sidewaysButton.state == 'down'
 
 class TakePhoto(Screen):
     image = ObjectProperty(None)
@@ -148,6 +168,8 @@ class PostureTracking(Screen):
     badPositionCount = 0
     badPictureCount = 0
 
+    homeIntervals = {1:10, 5:60, 10:60, 15:60}
+
     takingPictures = True
 
     def on_enter(self):
@@ -158,7 +180,7 @@ class PostureTracking(Screen):
         self.faceRec = FaceRecognition()
         self.badPictureCount = 0
         self.badPositionCount = 0
-        self.events.append(Clock.schedule_interval(self.update,60))
+        self.events.append(Clock.schedule_interval(self.update,self.homeIntervals[self.notificationInterval]))
         self.takingPictures = True
         self.count = 0
 
@@ -217,7 +239,7 @@ class PostureTracking(Screen):
             self.badPictureCount += 1
             self.image.source = "textures/notfound.png"
         
-        if self.badPictureCount > 5:
+        if self.badPictureCount > 2:
             notify.send("Posture Tracker", "I can't see you! Are you still there? Brighter lighting might be necessary")
         elif self.badPositionCount == self.notificationInterval * self.multiplier:
             notify.send("Posture Tracker", "You have been sitting badly for " + str(self.badPositionCount) + " minutes")
