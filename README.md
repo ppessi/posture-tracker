@@ -9,3 +9,6 @@ A program that will track your posture using a webcam and remind you to sit prop
 * Notify-osd needed for notifications at least on Linux systems
 * PIL image library
 * probably a ton of other stuff, will make an installer or a complete list at some point
+
+### Before usage
+* In main.py, in the FaceRecognition class, there is the path to a file. You need to change that to point at the file on your own computer. It can be found in OpenFace's folders.
